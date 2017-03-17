@@ -1295,6 +1295,45 @@ sub get_program_episode {
 	return \@result;
 }
 
+sub _get_program_episode_leadingzero {
+	my ($number, $total) = @_;
+	my $result = '';
+
+	if(looks_like_number($number) && int($number)) {
+		$result = sprintf('%02d', $number - 1);
+	}
+
+	return $result;
+}
+
+sub get_program_episode_and_subtitle {
+	my ($program, $details) = @_;
+	my $season = '';
+	my $episode = '';
+	my $part = '';
+	my @result;
+
+	my $metadata = $details->{'metadata'}->[0]->{'Gracenote'};
+	my $subtitle = $details->{'episodeTitle150'};
+	if($metadata)
+	{
+		$season = _get_program_episode_leadingzero($metadata->{'season'}, $metadata->{'totalSeason'});
+		$episode = _get_program_episode_leadingzero($metadata->{'episode'}, $metadata->{'totalEpisodes'});
+	}
+
+	if(length($season) || length($episode)) {
+		return [ [ sprintf('S%sE%s - %s', $season, $episode, $subtitle) ] ]
+	}
+	elsif($subtitle) {
+		return [ [ $subtitle ] ];
+	}
+	else {
+		return undef;
+	}
+
+	return \@result;
+}
+
 sub get_program_video {
 	my ($program) = @_;
 	my %video;
@@ -1442,7 +1481,7 @@ sub write_programme {
 			'start'            => $start,
 			'stop'             => $stop,
 			'title'            => get_program_title($details),
-			'sub-title'        => get_program_subtitle($details),
+			'sub-title'        => get_program_episode_and_subtitle($program, $details),
 			'desc'             => get_program_description($details),
 			'credits'          => get_program_credits($details),
 			'date'             => get_program_date($details),
