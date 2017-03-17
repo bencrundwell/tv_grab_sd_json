@@ -1306,7 +1306,7 @@ sub _get_program_episode_leadingzero {
 	return $result;
 }
 
-sub get_program_episode_and_subtitle {
+sub get_program_episode_and_description {
 	my ($program, $details) = @_;
 	my $season = '';
 	my $episode = '';
@@ -1314,21 +1314,39 @@ sub get_program_episode_and_subtitle {
 	my @result;
 
 	my $metadata = $details->{'metadata'}->[0]->{'Gracenote'};
-	my $subtitle = $details->{'episodeTitle150'};
+	my $descriptions = $details->{'descriptions'};
+	my $title = $details->{'titles'}->[0]->{'title120'};
+
+	my $description = '';
+
 	if($metadata)
 	{
 		$season = _get_program_episode_leadingzero($metadata->{'season'}, $metadata->{'totalSeason'});
 		$episode = _get_program_episode_leadingzero($metadata->{'episode'}, $metadata->{'totalEpisodes'});
 	}
 
-	if(length($season) || length($episode)) {
-		return [ [ sprintf('S%sE%s - %s', $season, $episode, $subtitle) ] ]
+	if(exists $descriptions->{'description1000'}) {
+		$description =  $descriptions->{'description1000'}->[0]->{'description'};
 	}
-	elsif($subtitle) {
-		return [ [ $subtitle ] ];
+	elsif(exists $descriptions->{'description100'}) {
+		$description = $descriptions->{'description100'}->[0]->{'description'};
+	}
+
+	if(length($season) || length($episode)) {
+		return [ [ sprintf('%s - S%sE%s - %s', $title, $season, $episode, $description) ] ]
+	}
+	elsif($description) {
+		return [ [ $description ] ];
 	}
 	else {
 		return undef;
+	}
+
+if($title) {
+		return [ [ $title ] ];
+	}
+	else {
+		return [ [ 'unknown' ] ];
 	}
 
 	return \@result;
@@ -1481,8 +1499,8 @@ sub write_programme {
 			'start'            => $start,
 			'stop'             => $stop,
 			'title'            => get_program_title($details),
-			'sub-title'        => get_program_episode_and_subtitle($program, $details),
-			'desc'             => get_program_description($details),
+			'sub-title'        => get_program_subtitle($details),
+			'desc'             => get_program_episode_and_description($program, $details),
 			'credits'          => get_program_credits($details),
 			'date'             => get_program_date($details),
 			'category'         => get_program_category($channel, $details),
