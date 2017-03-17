@@ -1300,7 +1300,7 @@ sub _get_program_episode_leadingzero {
 	my $result = '';
 
 	if(looks_like_number($number) && int($number)) {
-		$result = sprintf('%02d', $number - 1);
+		$result = sprintf('%02d', $number);
 	}
 
 	return $result;
